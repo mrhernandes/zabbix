@@ -1,0 +1,116 @@
+##Instalando Zabbix 5 Centos 8
+##Recentemente foi lançada a versão do Zabbix 5.0  e nada melhor que fazer uma postagem sobre como instalar.
+##Confira as novidades no link a seguir:
+##https://www.zabbix.com/documentation/5.0/manual/introduction/whatsnew500
+##Neste tutorial vamos abordar as etapas de instalação do Zabbix 5.0.0, conforme documentação via pacotes (repositórios).
+##Pré-requisitos 
+##Para instalação é necessários conhecimentos básicos na plataforma Linux.
+##Firewalld e Selinux desabilitados
+
+- Instalação
+- Instalando repositorio
+# rpm -Uvh https://repo.zabbix.com/zabbix/4.5/rhel/7/x86_64/zabbix-release-4.5-2.el7.noarch.rpm
+# dnf clean all
+
+- Instalando Zabbix server,Zabbix Agent e Frontend
+# dnf install zabbix-server-mysql zabbix-web-mysql zabbix-apache-conf zabbix-agent
+
+- Instalando banco de dados MariaDB
+# dnf install mariadb-server mariadb-devel mariadb-server-utils
+
+- Iniciando o MariaDB
+# systemctl start mariadb.service
+
+- Checando status do mariadb
+# systemctl status mariadb.service
+
+- Criando o banco de dados
+# mysql -uroot -p
+mysql> create database zabbix character set utf8 collate utf8_bin;
+mysql> grant all privileges on zabbix.* to zabbix@localhost identified by '123456';
+mysql> quit;
+
+- Populando a base de dados do Zabbix
+# zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -uzabbix -p zabbix
+
+- Adicionando as credenciais no arquivo zabbix_server.conf
+# vi /etc/zabbix/zabbix_server.conf
+
+DBHost=localhost
+DBName=zabbix
+DBUser=zabbix
+DBPassword=123456
+
+- Edite o arquivo /etc/php.ini e ajustes as linha conforme exemplo a seguir
+# vi /etc/php-fpm.d/zabbix.conf
+
+Antes
+; php_value[date.timezone] = Europe/Riga
+
+Depois 
+php_value[date.timezone] = America/Sao_Paulo
+
+- Iniciando o Zabbix Server,Zabbix Agent,httpd e php-fpm
+# systemctl restart zabbix-server zabbix-agent httpd php-fpm
+
+- Inserindo na inicialização do sistema
+# systemctl enable zabbix-server zabbix-agent httpd php-fpm
+
+########### ATENÇÃO ############
+Certifique-se que o selinux está desabilitado com o comando sestatus e o firewall 
+está desabilitado ou com suas permissões de serviços aplicadas.
+
+- Configurando a interface web do Zabbix
+Abra o browser e acesse a interface do Zabbix no endereço http://ip-do-servidor/zabbix e siga as telas abaixo;
+
+
+
+
+ Clique em Next
+
+
+
+
+
+Clique em Next
+
+
+
+
+
+
+
+Adicione as informaçãoes do Banco de dados configuradas nas etapas anteriores.
+
+
+
+
+
+Clique em Next
+
+
+
+
+
+Clique em Next
+
+
+
+
+
+ Clique em Finish e acesse a interface com usuário e senha:
+
+
+
+Usuário: Admin 
+
+Password: zabbix
+
+
+
+
+
+
+
+
+Pronto seu Zabbix está pronto para uso.
